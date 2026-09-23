@@ -1,1 +1,10 @@
 Ma hoa van ban bang AES256
+
+Trước hết phải cài thư viện mã hóa pycryptodome, nếu chưa có,dùng lệnh:
+	Bash
+py -m pip install pycryptodome
+
+Xong mới chạy py AES256.py
+1. Mã hóa/Giải mã
+2. Nhập mật khẩu
+3. Nhập văn bản
