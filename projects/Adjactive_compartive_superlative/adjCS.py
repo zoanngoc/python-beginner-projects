@@ -1,67 +1,52 @@
 from nltk.corpus import wordnet
-import nltk
-import re
-import json
 
-nltk.download("wordnet", quiet=True)
+def get_comparative_superlative(word):
+    word = word.strip().lower()
+    
+    # 1. Các từ bất quy tắc phổ biến
+    irregulars = {
+        'good': ('better', 'best'),
+        'bad': ('worse', 'worst'),
+        'little': ('less', 'least'),
+        'many': ('more', 'most'),
+        'much': ('more', 'most'),
+        'far': ('farther', 'farthest')
+    }
+    if word in irregulars:
+        return irregulars[word]
 
-# Load irregular adjectives from a JSON file
-with open("irregular_adjectives.json", "r") as f:
-    IRREGULAR_ADJECTIVES = json.load(f)
+    # 2. Quy tắc cho từ kết thúc bằng 'y' (happy -> happier / happiest)
+    if word.endswith('y') and len(word) > 2:
+        return word[:-1] + 'ier', word[:-1] + 'iest'
 
+    # 3. Quy tắc Nguyên âm + Phụ âm ở từ 1 âm tiết (big -> bigger / biggest)
+    vowels = 'aeiou'
+    if len(word) >= 3 and word[-1] not in vowels and word[-2] in vowels and word[-3] not in vowels:
+        if word[-1] not in ['w', 'x', 'y']:
+            return word + word[-1] + 'er', word + word[-1] + 'est'
 
-def get_comp_sup(adjs):
-    comp_sup = []
+    # 4. Từ kết thúc bằng 'e' (large -> larger / largest)
+    if word.endswith('e'):
+        return word + 'r', word + 'st'
 
-    for adj in adjs:
-        synsets = wordnet.synsets(adj, pos=wordnet.ADJ)
-        if synsets:
-            syn = synsets[0]
-            comp_forms = [lemma.name().replace("_", " ") for lemma in syn.lemmas()]
-            if len(comp_forms) >= 2:
-                comp_form = comp_forms[1]
-            else:
-                comp_form = get_comparative_form(adj)
-            if len(comp_forms) >= 3:
-                superl_form = comp_forms[2]
-            else:
-                superl_form = get_superlative_form(adj)
-            comp_sup.append((adj, comp_form, superl_form))
-        else:
-            comp_sup.append((adj, get_comparative_form(adj), get_superlative_form(adj)))
+    # 5. Từ ngắn thông thường (fast -> faster / fastest)
+    if len(word) <= 5:
+        return word + 'er', word + 'est'
 
-    return comp_sup
-
-
-def get_comparative_form(adj):
-    if adj in IRREGULAR_ADJECTIVES:
-        return IRREGULAR_ADJECTIVES[adj][0]
-    elif re.match(r"^[aeiou][a-z]*$", adj):
-        return adj + "er"
-    else:
-        return "more " + adj
-
-
-def get_superlative_form(adj):
-    if adj in IRREGULAR_ADJECTIVES:
-        return IRREGULAR_ADJECTIVES[adj][1]
-    elif re.match(r"^[aeiou][a-z]*$", adj):
-        return adj + "est"
-    else:
-        return "most " + adj
-
+    # 6. Từ dài (thêm more / most)
+    return f"more {word}", f"most {word}"
 
 def main():
     adjs = input("Enter a list of adjectives (comma-separated): ").split(",")
-    adjs = [adj.strip() for adj in adjs]
-
-    comp_sup = get_comp_sup(adjs)
-
-    print("\nAdjective\tComparative\tSuperlative")
-    print("------------------------------------------")
-    for adj, c, s in comp_sup:
-        print(f"{adj}\t\t{c}\t\t{s}")
-
+    
+    print("\n{:15} {:15} {:15}".format("Adjective", "Comparative", "Superlative"))
+    print("-" * 45)
+    
+    for adj in adjs:
+        adj = adj.strip()
+        if adj:
+            comp, sup = get_comparative_superlative(adj)
+            print("{:15} {:15} {:15}".format(adj, comp, sup))
 
 if __name__ == "__main__":
     main()
